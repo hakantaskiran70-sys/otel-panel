@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Otel Misafir Paneli</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --text:#1d2330; --muted:#6b7280; --line:#e3e6eb;
+  --accent:#1f6feb; --accent-text:#fff; --ok:#1a7f37; --bad:#c62828; --warn:#a15c00;
+  --chip:#eef2f7; --bar:#1f6feb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141a; --card:#1a1f27; --text:#e6e9ee; --muted:#9aa3b2; --line:#2b323d;
+    --accent:#4c8dff; --accent-text:#0b0f15; --ok:#4cc26b; --bad:#ff6b6b; --warn:#f0a43a;
+    --chip:#232a35; --bar:#4c8dff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141a; --card:#1a1f27; --text:#e6e9ee; --muted:#9aa3b2; --line:#2b323d;
+  --accent:#4c8dff; --accent-text:#0b0f15; --ok:#4cc26b; --bad:#ff6b6b; --warn:#f0a43a;
+  --chip:#232a35; --bar:#4c8dff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+.top{display:flex;align-items:center;gap:12px;padding:12px 0;flex-wrap:wrap}
+.top h1{font-size:18px;margin:0;flex:1;min-width:160px}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav button{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:10px 12px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--text);border-bottom-color:var(--accent)}
+main{padding:16px 0 48px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+label{display:block;font-size:13px;color:var(--muted)}
+input,select,textarea{width:100%;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+textarea{min-height:38px;resize:vertical}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.btn.bad{color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.row > *{flex:1;min-width:140px}
+.row > .btn{flex:0 0 auto}
+.tbl{width:100%;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+td.mono,.mono{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.chip{display:inline-block;padding:2px 8px;border-radius:99px;background:var(--chip);font-size:12px;font-weight:600}
+.chip.ok{color:var(--ok)} .chip.bad{color:var(--bad)} .chip.warn{color:var(--warn)}
+.muted{color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:24px}
+.stat span{color:var(--muted);font-size:13px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:120px;padding-top:8px}
+.bars div{flex:1;background:var(--bar);border-radius:3px 3px 0 0;min-height:1px;position:relative}
+.bars div:hover{opacity:.75}
+.hours{display:flex;gap:3px;font-size:10px;color:var(--muted)}
+.hours span{flex:1;text-align:center}
+.top-list{list-style:none;margin:0;padding:0}
+.top-list li{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)}
+.top-list li .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-list li .m{height:6px;background:var(--bar);border-radius:3px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.two{grid-template-columns:1fr}}
+.hidden{display:none!important}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--muted)}
+.drop.over{border-color:var(--accent);color:var(--text)}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px)}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <h1>Otel Misafir Paneli</h1>
+      <nav id="nav">
+        <button data-p="misafir" class="on">Misafirler</button>
+        <button data-p="site">Site Kayıtları</button>
+        <button data-p="butunluk">Bütünlük</button>
+        <button data-p="yedek">Yedek</button>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ MİSAFİRLER ============ -->
+<section id="p-misafir">
+  <div class="stats">
+    <div class="stat"><b id="sAktif">0</b><span>Şu an otelde</span></div>
+    <div class="stat"><b id="sBugun">0</b><span>Bugün giriş</span></div>
+    <div class="stat"><b id="sToplam">0</b><span>Toplam kayıt</span></div>
+  </div>
+
+  <div class="card">
+    <h2 id="formBaslik">Yeni misafir</h2>
+    <form id="fMisafir" autocomplete="off">
+      <input type="hidden" id="mId">
+      <div class="grid">
+        <label>Ad soyad *<input id="mAd" required maxlength="80"></label>
+        <label>Oda *<input id="mOda" required maxlength="10"></label>
+        <label>Telefon<input id="mTel" type="tel" maxlength="20" placeholder="05xx xxx xx xx"></label>
+        <label>Cihaz MAC adresi<input id="mMac" maxlength="40" placeholder="AA-BB-CC-DD-EE-FF"></label>
+        <label>Giriş<input id="mGiris" type="datetime-local" required></label>
+        <label>Çıkış<input id="mCikis" type="datetime-local"></label>
+      </div>
+      <label style="margin-top:10px">Not<textarea id="mNot" maxlength="300"></textarea></label>
+      <div class="row" style="margin-top:12px">
+        <button class="btn pri" type="submit">Kaydet</button>
+        <button class="btn hidden" type="button" id="mIptal">Vazgeç</button>
+      </div>
+      <p class="note">MAC adresi girerseniz, site kayıtlarında o cihaz misafirin adı ve odasıyla görünür.</p>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:12px">
+      <label>Ara<input id="mAra" placeholder="Ad, oda, telefon, MAC"></label>
+      <label>Durum<select id="mDurum"><option value="aktif">Otelde olanlar</option><option value="hepsi">Hepsi</option><option value="cikan">Çıkış yapanlar</option></select></label>
+      <button class="btn" id="mCsv" type="button">Excel'e aktar</button>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Oda</th><th>Ad soyad</th><th>Telefon</th><th>MAC</th><th>Giriş</th><th>Çıkış</th><th></th></tr></thead>
+      <tbody id="mListe"></tbody>
+    </table></div>
+    <p class="muted hidden" id="mBos" style="margin:12px 0 0">Kayıt yok.</p>
+  </div>
+</section>
+
+<!-- ============ SİTE KAYITLARI ============ -->
+<section id="p-site" class="hidden">
+  <div class="card">
+    <h2>MisafirLog kayıtlarını yükle</h2>
+    <div class="drop" id="drop">
+      Oteldeki bilgisayarın <span class="mono">MisafirLog\kayitlar</span> klasöründeki <b>.log</b> dosyalarını
+      ya da panelden indirilen <b>.csv</b> dosyasını buraya sürükleyin.
+      <div style="margin-top:10px"><label class="btn pri" style="display:inline-flex;color:var(--accent-text)">Dosya seç<input type="file" id="dosya" multiple accept=".log,.csv,.txt" class="hidden"></label></div>
+    </div>
+    <p class="note">Aynı günü tekrar yüklerseniz o günün kayıtları yenisiyle değiştirilir. Dosyalar internete gönderilmez, yalnızca bu tarayıcıda saklanır.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="kSatir">0</b><span>Kayıt (seçili aralık)</span></div>
+    <div class="stat"><b id="kCihaz">0</b><span>Farklı cihaz</span></div>
+    <div class="stat"><b id="kSite">0</b><span>Farklı site</span></div>
+    <div class="stat"><b id="kEngel">0</b><span>Engellenen deneme</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <label>Başlangıç<input type="date" id="fBas"></label>
+      <label>Bitiş<input type="date" id="fBit"></label>
+      <label>Cihaz / misafir<select id="fCihaz"><option value="">Tümü</option></select></label>
+      <label>Site<input id="fSite" placeholder="ör. youtube"></label>
+      <button class="btn pri" id="fUygula" type="button">Göster</button>
+      <button class="btn" id="fCsv" type="button">Excel'e aktar</button>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="card"><h2>Saatlere göre</h2><div class="bars" id="saatGrafik"></div><div class="hours" id="saatEtiket"></div></div>
+    <div class="card"><h2>En çok girilen siteler</h2><ul class="top-list" id="topSite"></ul></div>
+  </div>
+
+  <div class="card">
+    <h2>Cihazlar</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Cihaz</th><th>IP</th><th>Misafir</th><th>Kayıt</th><th>Son görülme</th><th>Ad ver</th></tr></thead>
+      <tbody id="cihazListe"></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>Kayıtlar</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Zaman</th><th>Cihaz / misafir</th><th>Site</th><th>Alan adı</th><th>Tür</th></tr></thead>
+      <tbody id="kListe"></tbody>
+    </table></div>
+    <p class="muted" id="kBilgi" style="margin:12px 0 0"></p>
+    <button class="btn hidden" id="kDaha" type="button" style="margin-top:10px">Daha fazla göster</button>
+  </div>
+</section>
+
+<!-- ============ BÜTÜNLÜK ============ -->
+<section id="p-butunluk" class="hidden">
+  <div class="card">
+    <h2>Kayıt bütünlüğü</h2>
+    <p class="muted" style="margin-top:0">MisafirLog her satırı SHA-256 ile bir öncekine zincirler. Yüklenen <b>.log</b> dosyaları burada kontrol edilir; bir satır değiştirilmiş ya da silinmişse o satır numarası gösterilir. CSV ile yüklenen günler kontrol edilemez.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Gün</th><th>Satır</th><th>Durum</th><th>Kaynak</th><th>Dosya özeti (SHA-256)</th></tr></thead>
+      <tbody id="bListe"></tbody>
+    </table></div>
+    <p class="muted hidden" id="bBos" style="margin:12px 0 0">Henüz kayıt yüklenmedi.</p>
+  </div>
+</section>
+
+<!-- ============ YEDEK ============ -->
+<section id="p-yedek" class="hidden">
+  <div class="card">
+    <h2>Yedek al / geri yükle</h2>
+    <p class="muted" style="margin-top:0">Tüm veriler yalnızca bu tarayıcıda durur. Tarayıcı geçmişi temizlenirse silinir. Düzenli yedek alın. Yedek dosyasını başka bir bilgisayarda bu sayfaya yükleyerek verileri taşıyabilirsiniz.</p>
+    <div class="row">
+      <button class="btn pri" id="yAl" type="button">Yedek indir</button>
+      <label class="btn" style="flex:0 0 auto">Yedekten geri yükle<input type="file" id="yYukle" accept=".json" class="hidden"></label>
+    </div>
+    <p class="note" id="yBilgi"></p>
+  </div>
+  <div class="card">
+    <h2>Görünüm</h2>
+    <div class="row">
+      <label>Tema<select id="tema"><option value="">Sistem</option><option value="light">Açık</option><option value="dark">Koyu</option></select></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Verileri sil</h2>
+    <div class="row">
+      <button class="btn bad" id="silSite" type="button">Site kayıtlarını sil</button>
+      <button class="btn bad" id="silHepsi" type="button">Her şeyi sil</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Yasal hatırlatma</h2>
+    <p class="muted" style="margin:0">Misafirleri kayıt tutulduğu konusunda bilgilendirin (KVKK aydınlatma metni, giriş levhası). 5651 sayılı Kanun kapsamında resmi zaman damgası gerekiyorsa günlük <span class="mono">.log</span> dosyalarını ayrıca damgalatın. Bu sayfa kayıtları değiştirmez, yalnızca görüntüler.</p>
+  </div>
+</section>
+
+</main>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ---------------- yardımcılar ---------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const yerelGun = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const yerelZaman = d => yerelGun(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+const gosterZaman = s => s ? s.replace("T", " ").slice(0, 16) : "";
+const macNorm = m => (m || "").toUpperCase().replace(/[^0-9A-F]/g, "").replace(/(..)(?!$)/g, "$1-");
+function toast(t){ const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("on"), 2600); }
+function ls(k, v){ try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+async function sha256(s){
+  const veri = new TextEncoder().encode(s);
+  if (window.crypto && crypto.subtle) {
+    const b = await crypto.subtle.digest("SHA-256", veri);
+    return Array.from(new Uint8Array(b), x => x.toString(16).padStart(2, "0")).join("");
+  }
+  return sha256Js(veri);
+}
+/* crypto.subtle olmayan ortamlar için (ör. bazı yerel dosya açılışları) saf JS SHA-256 */
+const K256 = new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+function sha256Js(m){
+  const l = m.length, n = ((l + 9 + 63) >> 6) << 6, b = new Uint8Array(n);
+  b.set(m); b[l] = 0x80;
+  const dv = new DataView(b.buffer); dv.setUint32(n - 4, l * 8 >>> 0); dv.setUint32(n - 8, Math.floor(l / 0x20000000));
+  const H = new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]), W = new Uint32Array(64);
+  const r = (x, k) => (x >>> k) | (x << (32 - k));
+  for (let o = 0; o < n; o += 64) {
+    for (let i = 0; i < 16; i++) W[i] = dv.getUint32(o + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const s0 = r(W[i-15], 7) ^ r(W[i-15], 18) ^ (W[i-15] >>> 3), s1 = r(W[i-2], 17) ^ r(W[i-2], 19) ^ (W[i-2] >>> 10);
+      W[i] = (W[i-16] + s0 + W[i-7] + s1) | 0;
+    }
+    let [a, bb, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (r(e, 6) ^ r(e, 11) ^ r(e, 25)) + ((e & f) ^ (~e & g)) + K256[i] + W[i]) | 0;
+      const t2 = ((r(a, 2) ^ r(a, 13) ^ r(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+    }
+    H[0] += a; H[1] += bb; H[2] += c; H[3] += d; H[4] += e; H[5] += f; H[6] += g; H[7] += h;
+  }
+  return Array.from(H, x => x.toString(16).padStart(8, "0")).join("");
+}
+const IKINCI = new Set(["com.tr","net.tr","org.tr","gov.tr","edu.tr","k12.tr","bel.tr","gen.tr","biz.tr","info.tr","av.tr","co.uk","org.uk","ac.uk","com.au","co.jp","com.br","co.in","com.cn"]);
+function kokAlan(a){
+  if (!a || /^[\d.]+$/.test(a) || a.includes(":")) return a;
+  const p = a.split("."); if (p.length <= 2) return a;
+  const s2 = p.slice(-2).join(".");
+  return IKINCI.has(s2) ? p.slice(-3).join(".") : s2;
+}
+function csvHucre(s){
+  s = String(s == null ? "" : s);
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
+  if (/[;"\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+function csvIndir(ad, basliklar, satirlar){
+  const metin = "﻿" + [basliklar, ...satirlar].map(r => r.map(csvHucre).join(";")).join("\r\n");
+  dosyaIndir(ad, new Blob([metin], {type: "text/csv;charset=utf-8"}));
+}
+function dosyaIndir(ad, blob){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = ad;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------------- veritabanı (IndexedDB) ---------------- */
+let db;
+function dbAc(){
+  return new Promise((ok, hata) => {
+    const r = indexedDB.open("otel-panel", 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore("misafir", {keyPath: "id"});
+      const k = d.createObjectStore("kayit", {autoIncrement: true}); k.createIndex("gun", "gun");
+      d.createObjectStore("gun", {keyPath: "gun"});
+      d.createObjectStore("ayar", {keyPath: "k"});
+    };
+    r.onsuccess = () => ok(db = r.result);
+    r.onerror = () => hata(r.error);
+  });
+}
+function tx(store, mod, f){
+  return new Promise((ok, hata) => {
+    const t = db.transaction(store, mod); let sonuc;
+    const s = Array.isArray(store) ? store.map(x => t.objectStore(x)) : t.objectStore(store);
+    Promise.resolve(f(s, v => sonuc = v)).catch(hata);
+    t.oncomplete = () => ok(sonuc); t.onerror = () => hata(t.error); t.onabort = () => hata(t.error);
+  });
+}
+const hepsi = (store, q, idx) => tx(store, "readonly", (s, set) => { const r = (idx ? s.index(idx) : s).getAll(q); r.onsuccess = () => set(r.result); });
+
+/* ---------------- sekmeler ---------------- */
+$("nav").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "p-" + b.dataset.p));
+  try { sessionStorage.setItem("sekme", b.dataset.p); } catch (e) {}
+  if (b.dataset.p === "site") siteGoster();
+  if (b.dataset.p === "butunluk") butunlukGoster();
+});
+
+/* ---------------- misafirler ---------------- */
+let misafirler = [];
+async function misafirYukle(){ misafirler = await hepsi("misafir"); misafirCiz(); }
+function formSifirla(){
+  $("fMisafir").reset(); $("mId").value = ""; $("mGiris").value = yerelZaman(new Date());
+  $("formBaslik").textContent = "Yeni misafir"; $("mIptal").classList.add("hidden");
+}
+$("mIptal").onclick = formSifirla;
+$("fMisafir").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = {
+    id: $("mId").value || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+    ad: $("mAd").value.trim(), oda: $("mOda").value.trim(), tel: $("mTel").value.trim(),
+    mac: macNorm($("mMac").value), giris: $("mGiris").value, cikis: $("mCikis").value || "", not: $("mNot").value.trim()
+  };
+  if (m.cikis && m.cikis < m.giris) { toast("Çıkış, girişten önce olamaz."); return; }
+  await tx("misafir", "readwrite", s => s.put(m));
+  toast($("mId").value ? "Güncellendi." : "Misafir kaydedildi.");
+  formSifirla(); misafirYukle();
+});
+function misafirFiltre(){
+  const q = $("mAra").value.trim().toLocaleLowerCase("tr"), d = $("mDurum").value;
+  return misafirler.filter(m => {
+    if (d === "aktif" && m.cikis) return false;
+    if (d === "cikan" && !m.cikis) return false;
+    if (!q) return true;
+    return [m.ad, m.oda, m.tel, m.mac, m.not].join(" ").toLocaleLowerCase("tr").includes(q);
+  }).sort((a, b) => b.giris.localeCompare(a.giris));
+}
+function misafirCiz(){
+  const bugun = yerelGun(new Date());
+  $("sAktif").textContent = misafirler.filter(m => !m.cikis).length;
+  $("sBugun").textContent = misafirler.filter(m => m.giris.startsWith(bugun)).length;
+  $("sToplam").textContent = misafirler.length;
+  const l = misafirFiltre();
+  $("mBos").classList.toggle("hidden", l.length > 0);
+  $("mListe").innerHTML = l.map(m => `<tr>
+    <td><b>${esc(m.oda)}</b></td>
+    <td>${esc(m.ad)}${m.not ? `<div class="muted" style="font-size:12px">${esc(m.not)}</div>` : ""}</td>
+    <td>${m.tel ? `<a href="tel:${esc(m.tel.replace(/\s/g, ""))}">${esc(m.tel)}</a>` : ""}</td>
+    <td class="mono">${esc(m.mac)}</td>
+    <td>${esc(gosterZaman(m.giris))}</td>
+    <td>${m.cikis ? esc(gosterZaman(m.cikis)) : '<span class="chip ok">Otelde</span>'}</td>
+    <td style="white-space:nowrap">
+      ${m.cikis ? "" : `<button class="btn sm" data-cik="${esc(m.id)}">Çıkış yap</button>`}
+      <button class="btn sm" data-duz="${esc(m.id)}">Düzenle</button>
+      <button class="btn sm bad" data-sil="${esc(m.id)}">Sil</button>
+    </td></tr>`).join("");
+}
+$("mListe").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const id = b.dataset.cik || b.dataset.duz || b.dataset.sil;
+  const m = misafirler.find(x => x.id === id); if (!m) return;
+  if (b.dataset.cik) {
+    m.cikis = yerelZaman(new Date()); await tx("misafir", "readwrite", s => s.put(m));
+    toast(`Oda ${m.oda}: çıkış yapıldı.`); misafirYukle();
+  } else if (b.dataset.duz) {
+    $("mId").value = m.id; $("mAd").value = m.ad; $("mOda").value = m.oda; $("mTel").value = m.tel;
+    $("mMac").value = m.mac; $("mGiris").value = m.giris; $("mCikis").value = m.cikis; $("mNot").value = m.not;
+    $("formBaslik").textContent = "Misafiri düzenle"; $("mIptal").classList.remove("hidden");
+    $("fMisafir").scrollIntoView({behavior: "smooth"});
+  } else if (b.dataset.sil) {
+    if (!confirm(`${m.ad} (Oda ${m.oda}) kaydı silinsin mi?`)) return;
+    await tx("misafir", "readwrite", s => s.delete(m.id)); toast("Silindi."); misafirYukle();
+  }
+});
+$("mAra").addEventListener("input", misafirCiz);
+$("mDurum").addEventListener("change", misafirCiz);
+$("mCsv").onclick = () => {
+  const l = misafirFiltre();
+  csvIndir("misafirler_" + yerelGun(new Date()) + ".csv",
+    ["Oda","Ad Soyad","Telefon","MAC","Giriş","Çıkış","Not"],
+    l.map(m => [m.oda, m.ad, m.tel, m.mac, gosterZaman(m.giris), gosterZaman(m.cikis), m.not]));
+};
+
+/* MAC + zamana göre misafir bul */
+function misafirBul(mac, zaman){
+  if (!mac) return null;
+  const z = zaman.replace(" ", "T").slice(0, 16);
+  let en = null;
+  for (const m of misafirler) {
+    if (m.mac !== mac) continue;
+    if (m.giris > z) continue;
+    if (m.cikis && m.cikis < z) continue;
+    if (!en || m.giris > en.giris) en = m;
+  }
+  return en;
+}
+
+/* ---------------- dosya yükleme ---------------- */
+function csvAyristir(metin){
+  const satirlar = []; let r = [], h = "", tirnak = false;
+  for (let i = 0; i < metin.length; i++) {
+    const c = metin[i];
+    if (tirnak) {
+      if (c === '"') { if (metin[i + 1] === '"') { h += '"'; i++; } else tirnak = false; }
+      else h += c;
+    } else if (c === '"') tirnak = true;
+    else if (c === ";") { r.push(h); h = ""; }
+    else if (c === "\n") { r.push(h.replace(/\r$/, "")); satirlar.push(r); r = []; h = ""; }
+    else h += c;
+  }
+  if (h || r.length) { r.push(h.replace(/\r$/, "")); satirlar.push(r); }
+  return satirlar;
+}
+const formulTemizle = s => s.startsWith("'") && /^'[=+\-@]/.test(s) ? s.slice(1) : s;
+
+async function dosyaIsle(dosya){
+  let metin = await dosya.text();
+  if (metin.charCodeAt(0) === 0xFEFF) metin = metin.slice(1);
+  const gunler = new Map(); // gun -> {satirlar:[], kaynak, ...}
+  if (/\.csv$/i.test(dosya.name) || metin.startsWith("Tarih;")) {
+    const s = csvAyristir(metin);
+    if (!s.length || !/^Tarih$/i.test(s[0][0])) throw new Error("Tanınmayan CSV biçimi");
+    const adlar = ls("cihazAd") || {};
+    for (const r of s.slice(1)) {
+      if (r.length < 8 || !/^\d{4}-\d\d-\d\d$/.test(r[0])) continue;
+      const k = {gun: r[0], zaman: r[0] + " " + r[1], ip: r[3], mac: formulTemizle(r[4]), alan: formulTemizle(r[5]), tur: r[7]};
+      if (r[2]) { const an = k.mac || k.ip; if (!adlar[an]) adlar[an] = formulTemizle(r[2]); }
+      if (!gunler.has(k.gun)) gunler.set(k.gun, {satirlar: [], kaynak: "CSV"});
+      gunler.get(k.gun).satirlar.push(k);
+    }
+    ls("cihazAd", adlar);
+  } else {
+    const ad = dosya.name.replace(/\.[^.]+$/, "");
+    const satirlar = metin.split("\n").map(x => x.replace(/\r$/, "")).filter(x => x.length);
+    // bütünlük zinciri
+    let gunAdi = /^\d{4}-\d\d-\d\d$/.test(ad) ? ad : (satirlar[0] || "").slice(0, 10);
+    let z = await sha256("MISAFIRLOG|" + gunAdi), hatali = 0;
+    const kayitlar = [];
+    for (let i = 0; i < satirlar.length; i++) {
+      const s = satirlar[i], p = s.split("\t");
+      if (p.length < 6) { if (!hatali) hatali = i + 1; continue; }
+      if (!hatali) {
+        const j = s.lastIndexOf("\t");
+        z = await sha256(z + "|" + s.slice(0, j));
+        if (z !== s.slice(j + 1)) hatali = i + 1;
+      }
+      kayitlar.push({gun: p[0].slice(0, 10), zaman: p[0], ip: p[1], mac: p[2], alan: p[3], tur: p[4]});
+    }
+    if (!kayitlar.length) throw new Error("Dosyada kayıt bulunamadı");
+    const dosyaOzet = await sha256(metin);
+    gunler.set(gunAdi, {satirlar: kayitlar, kaynak: "LOG", hatali, dosyaOzet});
+  }
+  for (const [gun, v] of gunler) {
+    await tx(["kayit", "gun"], "readwrite", ([k, g]) => {
+      const r = k.index("gun").openCursor(IDBKeyRange.only(gun));
+      r.onsuccess = () => {
+        const c = r.result;
+        if (c) { c.delete(); c.continue(); return; }
+        for (const s of v.satirlar) k.add(s);
+        g.put({gun, satir: v.satirlar.length, kaynak: v.kaynak, hatali: v.hatali || 0, dosyaOzet: v.dosyaOzet || "", yuklendi: new Date().toISOString()});
+      };
+    });
+  }
+  return [...gunler.keys()];
+}
+async function dosyalariYukle(liste){
+  let tamam = [], hatalar = [];
+  for (const f of liste) {
+    try { tamam.push(...await dosyaIsle(f)); }
+    catch (e) { hatalar.push(f.name + ": " + e.message); }
+  }
+  if (tamam.length) {
+    tamam.sort();
+    $("fBas").value = tamam[0]; $("fBit").value = tamam[tamam.length - 1];
+    toast(tamam.length + " gün yüklendi.");
+    await siteGoster();
+  }
+  if (hatalar.length) alert("Yüklenemeyen dosyalar:\n" + hatalar.join("\n"));
+}
+$("dosya").addEventListener("change", e => { dosyalariYukle([...e.target.files]); e.target.value = ""; });
+const drop = $("drop");
+["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => dosyalariYukle([...e.dataTransfer.files]));
+
+/* ---------------- site kayıtları ---------------- */
+let sonuc = [], gosterilen = 0;
+const SAYFA = 300;
+function cihazAnahtar(k){ return k.mac || k.ip; }
+function cihazEtiket(k){
+  const adlar = ls("cihazAd") || {}, an = cihazAnahtar(k), m = misafirBul(k.mac, k.zaman);
+  const parca = [];
+  if (m) parca.push(`<b>Oda ${esc(m.oda)}</b> · ${esc(m.ad)}`);
+  if (adlar[an]) parca.push(esc(adlar[an]));
+  if (!parca.length) parca.push(`<span class="mono">${esc(an)}</span>`);
+  return parca.join(" · ");
+}
+async function siteGoster(){
+  const gunler = (await hepsi("gun")).map(g => g.gun).sort();
+  if (!gunler.length) { sonuc = []; siteCiz([]); return; }
+  if (!$("fBas").value) $("fBas").value = gunler[gunler.length - 1];
+  if (!$("fBit").value) $("fBit").value = gunler[gunler.length - 1];
+  let bas = $("fBas").value, bit = $("fBit").value; if (bas > bit) [bas, bit] = [bit, bas];
+  const ham = await hepsi("kayit", IDBKeyRange.bound(bas, bit), "gun");
+  // cihaz listesi (filtreden önce)
+  const secili = $("fCihaz").value, cihazlar = new Map();
+  for (const k of ham) { const an = cihazAnahtar(k); if (!cihazlar.has(an)) cihazlar.set(an, k); }
+  const adlar = ls("cihazAd") || {};
+  $("fCihaz").innerHTML = '<option value="">Tümü</option>' + [...cihazlar.entries()].map(([an, k]) => {
+    const m = misafirBul(k.mac, k.zaman);
+    const t = [m ? "Oda " + m.oda + " " + m.ad : "", adlar[an] || "", an].filter(Boolean).join(" · ");
+    return `<option value="${esc(an)}"${an === secili ? " selected" : ""}>${esc(t)}</option>`;
+  }).join("");
+  const q = $("fSite").value.trim().toLowerCase();
+  sonuc = ham.filter(k => (!secili || cihazAnahtar(k) === secili) && (!q || k.alan.toLowerCase().includes(q)))
+             .sort((a, b) => b.zaman.localeCompare(a.zaman));
+  siteCiz(sonuc);
+}
+function siteCiz(l){
+  const cihazSay = new Map(), siteSay = new Map(), saat = new Array(24).fill(0); let engel = 0;
+  for (const k of l) {
+    const an = cihazAnahtar(k);
+    const c = cihazSay.get(an) || {n: 0, son: "", k}; c.n++; if (k.zaman > c.son) { c.son = k.zaman; c.k = k; } cihazSay.set(an, c);
+    const s = kokAlan(k.alan); siteSay.set(s, (siteSay.get(s) || 0) + 1);
+    saat[+k.zaman.slice(11, 13) || 0]++;
+    if (k.tur === "ENGEL") engel++;
+  }
+  $("kSatir").textContent = l.length.toLocaleString("tr");
+  $("kCihaz").textContent = cihazSay.size; $("kSite").textContent = siteSay.size; $("kEngel").textContent = engel;
+  const mx = Math.max(1, ...saat);
+  $("saatGrafik").innerHTML = saat.map((n, i) => `<div style="height:${n / mx * 100}%" title="${pad(i)}:00 · ${n} kayıt"></div>`).join("");
+  $("saatEtiket").innerHTML = saat.map((_, i) => `<span>${i % 3 === 0 ? pad(i) : ""}</span>`).join("");
+  const top = [...siteSay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12), tmx = top.length ? top[0][1] : 1;
+  $("topSite").innerHTML = top.length ? top.map(([s, n]) => `<li><span class="t">${esc(s)}</span><span class="m" style="width:${Math.max(4, n / tmx * 90)}px"></span><span class="muted">${n}</span></li>`).join("")
+    : '<li class="muted">Kayıt yok</li>';
+  const adlar = ls("cihazAd") || {};
+  $("cihazListe").innerHTML = [...cihazSay.entries()].sort((a, b) => b[1].n - a[1].n).map(([an, c]) => {
+    const m = misafirBul(c.k.mac, c.k.zaman);
+    return `<tr><td class="mono">${esc(an)}</td><td class="mono">${esc(c.k.ip)}</td>
+      <td>${m ? `<b>Oda ${esc(m.oda)}</b> · ${esc(m.ad)}` : '<span class="muted">—</span>'}</td>
+      <td>${c.n}</td><td>${esc(c.son.slice(0, 16))}</td>
+      <td><input data-ad="${esc(an)}" value="${esc(adlar[an] || "")}" placeholder="ör. Masa 4 tablet" style="margin:0;min-width:140px"></td></tr>`;
+  }).join("") || '<tr><td colspan="6" class="muted">Kayıt yok</td></tr>';
+  gosterilen = 0; $("kListe").innerHTML = ""; dahaGoster();
+}
+function dahaGoster(){
+  const parca = sonuc.slice(gosterilen, gosterilen + SAYFA);
+  $("kListe").insertAdjacentHTML("beforeend", parca.map(k => `<tr>
+    <td style="white-space:nowrap">${esc(k.zaman)}</td><td>${cihazEtiket(k)}</td>
+    <td><b>${esc(kokAlan(k.alan))}</b></td><td class="mono">${esc(k.alan)}</td>
+    <td>${k.tur === "ENGEL" ? '<span class="chip bad">ENGEL</span>' : `<span class="chip">${esc(k.tur)}</span>`}</td></tr>`).join(""));
+  gosterilen += parca.length;
+  $("kBilgi").textContent = sonuc.length ? `${sonuc.length.toLocaleString("tr")} kayıttan ${gosterilen.toLocaleString("tr")} tanesi gösteriliyor.` : "Bu aralıkta kayıt yok. Yukarıdan MisafirLog dosyası yükleyin.";
+  $("kDaha").classList.toggle("hidden", gosterilen >= sonuc.length);
+}
+$("kDaha").onclick = dahaGoster;
+$("fUygula").onclick = siteGoster;
+$("fSite").addEventListener("keydown", e => { if (e.key === "Enter") siteGoster(); });
+$("fCihaz").addEventListener("change", siteGoster);
+$("cihazListe").addEventListener("change", e => {
+  const i = e.target.closest("input[data-ad]"); if (!i) return;
+  const adlar = ls("cihazAd") || {}, v = i.value.trim().slice(0, 60);
+  if (v) adlar[i.dataset.ad] = v; else delete adlar[i.dataset.ad];
+  ls("cihazAd", adlar); toast("Cihaz adı kaydedildi."); siteGoster();
+});
+$("fCsv").onclick = () => {
+  if (!sonuc.length) { toast("Aktarılacak kayıt yok."); return; }
+  const adlar = ls("cihazAd") || {};
+  csvIndir(`site-kayitlari_${$("fBas").value}_${$("fBit").value}.csv`,
+    ["Tarih","Saat","Oda","Misafir","Cihaz Adı","IP","MAC","Alan Adı","Site","Tür"],
+    sonuc.map(k => { const m = misafirBul(k.mac, k.zaman);
+      return [k.zaman.slice(0, 10), k.zaman.slice(11), m ? m.oda : "", m ? m.ad : "", adlar[cihazAnahtar(k)] || "", k.ip, k.mac, k.alan, kokAlan(k.alan), k.tur]; }));
+};
+
+/* ---------------- bütünlük ---------------- */
+async function butunlukGoster(){
+  const l = (await hepsi("gun")).sort((a, b) => b.gun.localeCompare(a.gun));
+  $("bBos").classList.toggle("hidden", l.length > 0);
+  $("bListe").innerHTML = l.map(g => `<tr><td>${esc(g.gun)}</td><td>${g.satir.toLocaleString("tr")}</td>
+    <td>${g.kaynak !== "LOG" ? '<span class="chip warn">Kontrol edilemez</span>'
+       : g.hatali ? `<span class="chip bad">Bozuk — satır ${g.hatali}</span>` : '<span class="chip ok">Sağlam</span>'}</td>
+    <td>${esc(g.kaynak)}</td><td class="mono" style="font-size:11px;word-break:break-all">${esc(g.dosyaOzet || "—")}</td></tr>`).join("");
+}
+
+/* ---------------- yedek ---------------- */
+$("yAl").onclick = async () => {
+  const veri = {uygulama: "otel-panel", surum: 1, tarih: new Date().toISOString(),
+    misafir: await hepsi("misafir"), kayit: await hepsi("kayit"), gun: await hepsi("gun"), cihazAd: ls("cihazAd") || {}};
+  dosyaIndir("otel-panel-yedek_" + yerelGun(new Date()) + ".json", new Blob([JSON.stringify(veri)], {type: "application/json"}));
+  ls("sonYedek", new Date().toISOString()); yedekBilgi();
+};
+$("yYukle").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const v = JSON.parse(await f.text());
+    if (v.uygulama !== "otel-panel") throw new Error("Bu bir Otel Paneli yedeği değil.");
+    if (!confirm("Mevcut veriler silinip yedekteki veriler yüklenecek. Devam edilsin mi?")) return;
+    await tx(["misafir", "kayit", "gun"], "readwrite", ([m, k, g]) => {
+      m.clear(); k.clear(); g.clear();
+      (v.misafir || []).forEach(x => m.put(x)); (v.kayit || []).forEach(x => k.add(x)); (v.gun || []).forEach(x => g.put(x));
+    });
+    ls("cihazAd", v.cihazAd || {});
+    toast("Yedek geri yüklendi."); await misafirYukle();
+  } catch (err) { alert("Yedek yüklenemedi: " + err.message); }
+});
+function yedekBilgi(){
+  const s = ls("sonYedek");
+  $("yBilgi").textContent = s ? "Son yedek: " + new Date(s).toLocaleString("tr") : "Bu tarayıcıda henüz yedek alınmadı.";
+}
+$("silSite").onclick = async () => {
+  if (!confirm("Tüm site kayıtları bu tarayıcıdan silinsin mi? (MisafirLog bilgisayarındaki dosyalar etkilenmez.)")) return;
+  await tx(["kayit", "gun"], "readwrite", ([k, g]) => { k.clear(); g.clear(); });
+  $("fBas").value = $("fBit").value = ""; toast("Site kayıtları silindi.");
+};
+$("silHepsi").onclick = async () => {
+  if (!confirm("Misafirler dahil TÜM veriler bu tarayıcıdan silinsin mi? Bu geri alınamaz.")) return;
+  await tx(["misafir", "kayit", "gun"], "readwrite", ([m, k, g]) => { m.clear(); k.clear(); g.clear(); });
+  try { localStorage.removeItem("cihazAd"); } catch (e) {}
+  $("fBas").value = $("fBit").value = ""; toast("Tüm veriler silindi."); misafirYukle();
+};
+$("tema").addEventListener("change", e => {
+  const v = e.target.value; if (v) document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme;
+  ls("tema", v);
+});
+
+/* ---------------- başlat ---------------- */
+(async () => {
+  const t = ls("tema"); if (t) { document.documentElement.dataset.theme = t; $("tema").value = t; }
+  try { await dbAc(); } catch (e) { alert("Tarayıcı veritabanı açılamadı. Gizli pencere kullanıyorsanız normal pencerede açın."); return; }
+  formSifirla(); yedekBilgi(); await misafirYukle();
+  let s = null; try { s = sessionStorage.getItem("sekme"); } catch (e) {}
+  if (s) { const b = document.querySelector(`#nav button[data-p="${s}"]`); if (b) b.click(); }
+})();
+</script>
+</body>
+</html>
